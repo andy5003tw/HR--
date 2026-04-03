@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { Upload, FileText, RefreshCw, Trash2, UserPlus, Filter, AlertCircle } from 'lucide-react';
+import { Upload, FileText, RefreshCw, Trash2, UserPlus, Filter, AlertCircle, Download } from 'lucide-react';
 import Papa from 'papaparse';
 import { cn, generateMockNames } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -91,6 +91,21 @@ export function DataInput({ names, setNames, setWinners }: DataInputProps) {
   const removeItem = (indexToRemove: number, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setNames(names.filter((_, i) => i !== indexToRemove));
+  };
+
+  const handleDownloadCSV = () => {
+    if (names.length === 0) return;
+    const csv = Papa.unparse(names.map(name => [name]));
+    // 加入 BOM 以確保 Excel 正確解析 UTF-8 中文
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "participants.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleClear = () => {
@@ -211,6 +226,15 @@ export function DataInput({ names, setNames, setWinners }: DataInputProps) {
               </span>
             </h2>
             <div className="flex gap-2">
+              {names.length > 0 && (
+                <button
+                  onClick={handleDownloadCSV}
+                  className="text-slate-500 hover:text-indigo-600 p-2 hover:bg-indigo-50 rounded-lg transition-colors"
+                  title="下載 CSV"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+              )}
               {names.length > 0 && (
                 <button
                   onClick={handleRemoveDuplicates}
